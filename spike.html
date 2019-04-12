@@ -12,230 +12,386 @@
     </style>
 </head>
 
-<body translate="no">
+<body>
 
     <div id="full-container">
-        <div id="simple_rectangle1"></div>
-        <div id="simple_rectangle2"></div>
+        <div id="svgChart"></div>
     </div>
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
 
     <script>
-        var data = [
-            {
-                "macAddress": "mac1",
-                "type": "server",
-                "level": "L1",
-                "link": ["mac3", "mac4"]
+        
+        var params = {
+            selector: "#svgChart",
+            dataLoadUrl: "https://api.myjson.com/bins/p2jq0",
+            // dataLoadUrl: "https://api.myjson.com/bins/11msl4",
+            chartWidth: window.innerWidth - 50,
+            chartHeight: window.innerHeight - 50,
+            funcs: {
+                ItemClick: null,
+                toggleFullScreen: null,
             },
-            {
-                "macAddress": "mac2",
-                "type": "server",
-                "level": "L1",
-                "link": ["mac4"]
-            },
-            {
-                "macAddress": "mac3",
-                "type": "router",
-                "level": "L2",
-                "link": ["mac4", "mac5"]
-            },
-            {
-                "macAddress": "mac4",
-                "type": "router",
-                "level": "L2",
-                "link": ["mac2"]
-            },
-            {
-                "macAddress": "mac5",
-                "type": "router",
-                "level": "L3",
-                "link": ["mac2"]
-            },
-            {
-                "macAddress": "mac6",
-                "type": "router",
-                "level": "L4",
-                "link": ["mac4"]
-            }
-        ];
+            data: null,
+            levels: null,
+            levelData: []
+        }
 
-        var level1Data = data.filter((item) => {
-            return item.level == "L1"
+        var attrs = {
+            selector: params.selector,
+            root: params.data,
+            width: params.chartWidth,
+            height: params.chartHeight,
+            levelHeight: params.chartHeight/4,
+            levelWidth: 20,
+            maxLevel: 4,
+            levelBGColor: '#000000',
+            levelTextColor: '#B4B4B4',
+            levelTapColor: '#0C74DA'
+        }
+
+        var levels = {
+            "LEVEL1": 1,
+            "LEVEL2": 2,
+            "LEVEL3": 3,
+            "LEVEL4": 4
+        }
+
+        d3.json(params.dataLoadUrl, function (data) {
+            params.data = data.assetData;
+            params.levels = data.levelDetails;
+            drawPurdueChart(params);
         });
 
-        var leve2Data = data.filter((item) => {
-            return item.level == "L2"
-        });
+        drawPurdueChart = (params) => {
 
-        var leve3Data = data.filter((item) => {
-            return item.level == "L3"
-        });
-
-        var leve4Data = data.filter((item) => {
-            return item.level == "L4"
-        });
-
-        var contDataSet = [
-            { 'w': 40, 'h': 100, 'color': 'yellow', 'level': 'Level 4', 'id': 'Level1', 'data': level1Data },
-            { 'w': 40, 'h': 100, 'b': 20, 'color': 'pink', 'level': 'Level 3', 'id': 'Level2', 'data': leve2Data },
-            { 'w': 40, 'h': 100, 'b': 40, 'color': 'red', 'level': 'Level 2', 'id': 'Level3', 'data': leve3Data },
-            {'w': 40, 'h': 100, 'b':60 ,'color': 'blue', 'level': 'Level 1', 'id': 'Level4', 'data': leve4Data}
-        ];
-
-        // create the svg container 
-        var svg = d3.select("#simple_rectangle1")
-            .append("svg")
-            .attr("width", 500)
-            .attr("height", 500);
-
-        var diagonal = d3.svg.diagonal()
-                .projection(function(d) { return [d.y, d.x]; });
-
-        // create base on the container based on the data
-        var g = svg.selectAll("g")
-            .data(contDataSet)
-            .enter().append("g");
-
-        // add a rectangle for the level
-        var reactangle = g.append("rect")
-            .attr({
-                "id": function (d) { return d.id; },
-                "width": function (d) { return d.w; },
-                "height": function (d) { return d.h; },
-                "bottom": function (d) { return d.b }
-            })
-            .style({
-                "fill": function (d) { return d.color; },
-                "transform": function (d, i) { return `translate(0, ${i * d.h}px)` }
-            })
-            .on("click", function (d) {
-                console.log(d);
-            });
-
-        // create the right base for the devices to display 
-        var device = g.append("g")
-            .style({
-                "fill": function (d) { return d.color; },
-                "transform": function (d, i) { return `translate( ${d.w*2}px, ${ i * d.h + 10}px)` }
-            })
-            .selectAll("g")
-            .data(function (d) { return d.data })
-            .enter().append("g");
-
-            // add rectangle on created area (Devices)
-            device.append("circle").attr({
-                "id": function (d) { return d.macAddress; },
-                "r": function (d) { return 20; },
-                "cx": function (d) { return 30; },
-                "cy": function (d) { return 30; }
-            })
-            .style({
-                "fill": function (d) { return d.color; },
-                "transform": function (d, i) { return `translate(${60*i}px,0px)` }
-            });
-
-            // add title on it
-            device.append("text").style({
-                "fill": function (d) { return 'black'; },
-                "font-weight": function (d, i) { return `bold` },
-                "font-size": "16px",
-                "transform": function (d, i) { return `translate(${60*i}px,0px)` }
-            }).text(function (d, i) { return d.macAddress });
-
-            // add text on level
-            g.append("text")
-            .style({
-                "fill": function (d) { return 'black'; },
-                "font-weight": function (d, i) { return `bold` },
-                "font-size": "16px",
-                "transform": function (d, i) { return `translate(0, ${i * d.h}px) rotate(90deg)` }
-            })
-            .text(function (d, i) { return d.level });
-
-            // add line to differentiate levels
-            g.append("line")
-            .style({
-                "stroke": function (d) { return 'black'; }
-            })
-            .attr({
-                "x1": 0,
-                "x2": 500,
-                "y1": function (d, i) { return i * d.h + d.h; },
-                "y2": function (d, i) { return i * d.h + d.h; }
-            });    
-
-            function makeLineObject(){
-                var resObj = [];
-                var jatera = [];
-                data.forEach(element => {
-                    var node = d3.select(`#${element.macAddress}`).node();
-                    jatera.push("00000");
-                    jatera.push(element.macAddress);
-                    var cordinates = getCoordinate(node);
-                        element.link.forEach( element1 => {
-                            jatera.push(element1);
-                            var childNode = d3.select(`#${element1}`).node();
-                                cCordinates = getCoordinate1(childNode);
-                                var sossom = {...cordinates,...cCordinates}
-                                resObj.push(sossom);
-                        });
+            makeLevelData = (data) => {
+                let res = [];
+                params.levels.forEach(element => {
+                    var resData = data.filter((item) => {
+                        return item.purdueLevel == element
+                    });
+                    res.push({ id: element, data: resData });
                 });
-                return resObj;
-            }
+                params.levelData = res.reverse();
+            };
 
-            function getCoordinate(node) {
-                var source = node.getBoundingClientRect();
-                return {
-                    "x1": source.x,
-                    "y1": source.y
+            (() => {
+                makeLevelData(params.data);
+            })();
+
+           
+            // create the svg container 
+            var svgContainer = d3.select(attrs.selector)
+                .append("svg")
+                .attr("width", attrs.width)
+                .attr("height", attrs.height).append("g");
+
+            var levelContainer = svgContainer.selectAll("g")
+                .data(params.levelData)
+                .enter().append("g");
+
+            // add a rectangle for the level
+            var levelbox = levelContainer.append("rect")
+                .attr({
+                    "id": function (d) { return d.assetIdShort; },
+                    "width": attrs.levelWidth,
+                    "height": attrs.levelHeight,
+                })
+                .style({
+                    "fill": function (d) { return d.color; },
+                    "stroke": "white",
+                    "stroke-width": 1,
+                    "transform": function (d, i) { return `translate(0, ${i * attrs.levelHeight}px)` }
+                });
+                
+                levelContainer.append("text")
+                .style({
+                    "fill": 'white',
+                    "font-weight":  `bold`,
+                    "font-size": "12px",
+                    "transform": function (d, i) { return `translate(0, ${((i * attrs.levelHeight) + attrs.levelHeight/2)}px) rotate(90deg)` },
+                    "text-anchor": "middle"
+                }).text(function (d, i) { return d.id; })
+                .attr('dy', '-0.4em');
+
+                levelContainer.append("line")
+                .style({
+                    "stroke": function (d) { return 'black'; },
+                    "stroke-dasharray": function (d) { return '5,5'; }
+                })
+                .attr({
+                    "x1": 0,
+                    "x2": params.chartWidth,
+                    "y1": function (d, i) { return i * attrs.levelHeight },
+                    "y2": function (d, i) { return i * attrs.levelHeight },
+                    "id": function (d,i) { return `line${levels[d.id]}`}
+                });    
+
+                var deviceContainer = levelContainer.append("g")
+                .style({
+                    "transform": function (d, i) { return `translate( ${attrs.levelWidth*2}px, ${ i * attrs.levelHeight + attrs.levelHeight/2.5}px)` }
+                })
+                .selectAll("g")
+                .data(function (d) { return d.data; })
+                .enter().append("g");
+
+                deviceContainer.append("svg:image")
+                .attr({
+                    "xlink:href": function (d) { return `./svg/${d.assetType}.svg` },
+                    "height": 30,
+                    "width": 30,
+                    "id": function (d) { return `${d.assetIdShort}`; },
+                    "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; }
+                })
+                .style({
+                    "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+                })
+                .on("click", function (d) {
+                    d3.selectAll(".dline").remove();
+                    svgContainer
+                        .selectAll(".line")
+                        .data(makeLineObject([d]))
+                        .enter().append("path")
+                        .attr("class", "dline")
+                        .attr("d", lineFunction)
+                        .attr("stroke", "#FF0000")
+                        .attr("stroke-width", 2)
+                        .attr("fill", "none").style("stroke-opacity", 1);
+                });
+
+
+                deviceContainer
+                    .append("text")
+                    .text(function (d, i) { return d.assetName.replace("in-w-itlis","")})
+                    .style({
+                        "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+                    });
+
+                
+                getCoordinate = (node) => {
+                    var source = node.getBoundingClientRect();
+                    return {
+                        "x": source.x,
+                        "y": source.y
+                    }
+                };
+
+                drawPathNode = (element, element1) => {
+                    var nodeLine= []; 
+                    var source = d3.select(`#${element}`).node();
+                    var sourceCord = getCoordinate(source);
+                    var sourcelevel = source.dataset.level;
+                    var destination = d3.select(`#${element1}`).node();
+                    var distCord = getCoordinate(destination);
+                    var destinationevel = destination.dataset.level;
+                    var level = 0;
+
+                    if(sourcelevel > destinationevel){
+                        level = destinationevel;
+                    } else if(sourcelevel < destinationevel) {
+                        level = sourcelevel;
+                    } else {
+                        level = sourcelevel;
+                    }
+                    
+                    var pipe = d3.select(`#line${parseInt(level)}`).node();
+                    var pipeCord = getCoordinate(pipe);
+                    
+                    nodeLine.push(sourceCord);
+                    nodeLine.push({'x': sourceCord.x, 'y': pipeCord.y});
+                    nodeLine.push({'x': distCord.x, 'y': pipeCord.y});
+                    nodeLine.push({'x': distCord.x, 'y': distCord.y});
+                    return nodeLine;
                 }
-            }
 
-            function getCoordinate1(node) {
-                var source = node.getBoundingClientRect();
-                return {
-                    "x2": source.x,
-                    "y2": source.y
+                makeLineObject= (data) => {
+                    var result = [];
+                    data.forEach(element => {
+                        element.link.forEach( element1 => {
+                            var nodeLine = drawPathNode(element.assetIdShort,element1.assetIdShort);
+                            result.push(nodeLine);
+                        });                   
+                    });
+                    return result;
                 }
-            }
 
-            var svg1 = d3.select("#simple_rectangle2")
-            .append("svg")
-            .attr("width", 50)
-            .attr("height", 50);
+            var lineFunction = d3.svg.line()
+                        .x(function(d) { return d.x; })
+                        .y(function(d) { return d.y; })
+                        .interpolate("linear");
 
-            svg1.append("defs").append("marker")
-            .attr("id", "arrowhead")
-            .attr("markerUnits", "strokeWidth")
-            .attr("markerWidth", 12)
-            .attr("markerHeight", 12)
-            .attr("viewBox", "0 0 12 12")
-            .attr("refX", 6 )
-            .attr("refY", 6)
-            .attr("orient", "auto")
-            .append("path")
-            .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
-            .style("transform", function (d, i) { return `scale(10 10)` })
+            svgContainer
+                .selectAll(".line")
+                .data(makeLineObject(params.data))
+                .enter().append("path")
+                .attr("class", "fline")
+                .attr("d", lineFunction)
+                .attr("stroke", "#D3D3D3")
+                .attr("stroke-width", .5)
+                .attr("fill", "none");
 
-            g.selectAll("line")
-            .data(makeLineObject())
-            .enter().append("line")
-            .attr({
-                "x1": function (d) { return d.x1; },
-                "x2": function (d) { return d.x2; },
-                "y1": function (d) { return d.y1; },
-                "y2": function (d) { return d.y2; },
-                "stroke-width": .5,
-                "stroke": "black",
-                "marker-end":"url(#arrowhead)"  
-            })
-            .style({
-                "stroke-dasharray": 0
-            }); 
+//=========================================
 
-          
+                        // var lineGraph = svgContainer
+                        //     .selectAll("path")
+                        //     .data(makeLineObject())
+                        //     .append("path")
+                        //     .attr("d", function (d,t) {return lineFunction(d)} )
+                        //     .attr("stroke", "blue")
+                        //     .attr("stroke-width", 2)
+                        //     .attr("fill", "none");
+
+            // g.selectAll("line")
+            // .data(makeLineObject())
+            // .enter().append("line")
+            // .attr({
+            //     "x1": function (d) { return d.x1; },
+            //     "x2": function (d) { return d.x2; },
+            //     "y1": function (d) { return d.y1; },
+            //     "y2": function (d) { return d.y2; },
+            //     "stroke-width": .5,
+            //     "stroke": "black",
+            //     "marker-end":"url(#arrowhead)"  
+            // })
+            // .style({
+            //     "stroke-dasharray": 0
+            // });
+
+
+
+            // function getCoordinate(node) {
+            //     var source = node.getBoundingClientRect();
+            //     return {
+            //         "x1": source.x,
+            //         "y1": source.y
+            //     }
+            // }
+
+            // function getCoordinate1(node) {
+            //     var source = node.getBoundingClientRect();
+            //     return {
+            //         "x2": source.x,
+            //         "y2": source.y
+            //     }
+            // }
+
+            // levelContainer.selectAll("line")
+            //     .data(makeLineObject())
+            //     .enter().append("line")
+            //     .attr({
+            //         "x1": function (d) { return d.x1; },
+            //         "x2": function (d) { return d.x2; },
+            //         "y1": function (d) { return d.y1; },
+            //         "y2": function (d) { return d.y2; },
+            //         "stroke-width": .5,
+            //         "stroke": "black"  
+            //     })
+            //     .style({
+            //         "stroke-dasharray": 0
+            // }); 
+
+            
+        //     // add title on it
+        //     device.append("text").style({
+        //         "fill": function (d) { return 'black'; },
+        //         "font-weight": function (d, i) { return `bold` },
+        //         "font-size": "16px",
+        //         "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+        //     }).text(function (d, i) { return d.assetId });
+
+        //     // add text on level
+        //     g.append("text")
+        //     .style({
+        //         "fill": function (d) { return 'black'; },
+        //         "font-weight": function (d, i) { return `bold` },
+        //         "font-size": "16px",
+        //         "transform": function (d, i) { return `translate(0, ${i * d.h}px) rotate(90deg)` }
+        //     })
+        //     .text(function (d, i) { return d.level });
+
+        //     // add line to differentiate levels
+        //     g.append("line")
+        //     .style({
+        //         "stroke": function (d) { return 'black'; }
+        //     })
+        //     .attr({
+        //         "x1": 0,
+        //         "x2": 500,
+        //         "y1": function (d, i) { return i * d.h + d.h; },
+        //         "y2": function (d, i) { return i * d.h + d.h; }
+        //     });    
+
+        //     function makeLineObject(){
+        //         var resObj = [];
+        //         var jatera = [];
+        //         data.forEach(element => {
+        //             var node = d3.select(`#${element.assetId}`).node();
+        //             jatera.push("00000");
+        //             jatera.push(element.assetId);
+        //             var cordinates = getCoordinate(node);
+        //                 element.link.forEach( element1 => {
+        //                     jatera.push(element1);
+        //                     var childNode = d3.select(`#${element1}`).node();
+        //                         cCordinates = getCoordinate1(childNode);
+        //                         var sossom = {...cordinates,...cCordinates}
+        //                         resObj.push(sossom);
+        //                 });
+        //         });
+        //         return resObj;
+        //     }
+
+        //     function getCoordinate(node) {
+        //         var source = node.getBoundingClientRect();
+        //         return {
+        //             "x1": source.x,
+        //             "y1": source.y
+        //         }
+        //     }
+
+        //     function getCoordinate1(node) {
+        //         var source = node.getBoundingClientRect();
+        //         return {
+        //             "x2": source.x,
+        //             "y2": source.y
+        //         }
+        //     }
+
+        //     var svg1 = d3.select("#simplerectangle2")
+        //     .append("svg")
+        //     .attr("width", 50)
+        //     .attr("height", 50);
+
+        //     svg1.append("defs").append("marker")
+        //     .attr("id", "arrowhead")
+        //     .attr("markerUnits", "strokeWidth")
+        //     .attr("markerWidth", 12)
+        //     .attr("markerHeight", 12)
+        //     .attr("viewBox", "0 0 12 12")
+        //     .attr("refX", 6 )
+        //     .attr("refY", 6)
+        //     .attr("orient", "auto")
+        //     .append("path")
+        //     .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
+        //     .style("transform", function (d, i) { return `scale(10 10)` })
+
+        //     g.selectAll("line")
+        //     .data(makeLineObject())
+        //     .enter().append("line")
+        //     .attr({
+        //         "x1": function (d) { return d.x1; },
+        //         "x2": function (d) { return d.x2; },
+        //         "y1": function (d) { return d.y1; },
+        //         "y2": function (d) { return d.y2; },
+        //         "stroke-width": .5,
+        //         "stroke": "black",
+        //         "marker-end":"url(#arrowhead)"  
+        //     })
+        //     .style({
+        //         "stroke-dasharray": 0
+        //     }); 
+        }
+    
     </script>
 
 </body>

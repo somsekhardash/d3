@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodePen - Redesigned - Company Employees Hierarchy Chart </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        line {
+            stroke-dasharray: 5, 5;
+        }
+    </style>
+</head>
+
+<body translate="no">
+
+    <div id="full-container">
+        <div id="simple_rectangle1"></div>
+        <div id="simple_rectangle2"></div>
+    </div>
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
+
+    <script>
+        var data = [
+            {
+                "macAddress": "mac1",
+                "type": "server",
+                "level": "L1",
+                "link": ["mac3", "mac4"]
+            },
+            {
+                "macAddress": "mac2",
+                "type": "server",
+                "level": "L1",
+                "link": ["mac4"]
+            },
+            {
+                "macAddress": "mac3",
+                "type": "router",
+                "level": "L2",
+                "link": ["mac4", "mac5"]
+            },
+            {
+                "macAddress": "mac4",
+                "type": "router",
+                "level": "L2",
+                "link": ["mac2"]
+            },
+            {
+                "macAddress": "mac5",
+                "type": "router",
+                "level": "L3",
+                "link": ["mac2"]
+            },
+            {
+                "macAddress": "mac6",
+                "type": "router",
+                "level": "L4",
+                "link": ["mac4"]
+            }
+        ];
+
+        var level1Data = data.filter((item) => {
+            return item.level == "L1"
+        });
+
+        var leve2Data = data.filter((item) => {
+            return item.level == "L2"
+        });
+
+        var leve3Data = data.filter((item) => {
+            return item.level == "L3"
+        });
+
+        var leve4Data = data.filter((item) => {
+            return item.level == "L4"
+        });
+
+        var contDataSet = [
+            { 'w': 40, 'h': 100, 'color': 'yellow', 'level': 'Level 4', 'id': 'Level1', 'data': level1Data },
+            { 'w': 40, 'h': 100, 'b': 20, 'color': 'pink', 'level': 'Level 3', 'id': 'Level2', 'data': leve2Data },
+            { 'w': 40, 'h': 100, 'b': 40, 'color': 'red', 'level': 'Level 2', 'id': 'Level3', 'data': leve3Data },
+            {'w': 40, 'h': 100, 'b':60 ,'color': 'blue', 'level': 'Level 1', 'id': 'Level4', 'data': leve4Data}
+        ];
+
+        // create the svg container 
+        var svg = d3.select("#simple_rectangle1")
+            .append("svg")
+            .attr("width", 500)
+            .attr("height", 500);
+
+        var diagonal = d3.svg.diagonal()
+                .projection(function(d) { return [d.y, d.x]; });
+
+        // create base on the container based on the data
+        var g = svg.selectAll("g")
+            .data(contDataSet)
+            .enter().append("g");
+
+        // add a rectangle for the level
+        var reactangle = g.append("rect")
+            .attr({
+                "id": function (d) { return d.id; },
+                "width": function (d) { return d.w; },
+                "height": function (d) { return d.h; },
+                "bottom": function (d) { return d.b }
+            })
+            .style({
+                "fill": function (d) { return d.color; },
+                "transform": function (d, i) { return `translate(0, ${i * d.h}px)` }
+            })
+            .on("click", function (d) {
+                console.log(d);
+            });
+
+        // create the right base for the devices to display 
+        var device = g.append("g")
+            .style({
+                "fill": function (d) { return d.color; },
+                "transform": function (d, i) { return `translate( ${d.w*2}px, ${ i * d.h + 10}px)` }
+            })
+            .selectAll("g")
+            .data(function (d) { return d.data })
+            .enter().append("g");
+
+            // add rectangle on created area (Devices)
+            device.append("circle").attr({
+                "id": function (d) { return d.macAddress; },
+                "r": function (d) { return 20; },
+                "cx": function (d) { return 30; },
+                "cy": function (d) { return 30; }
+            })
+            .style({
+                "fill": function (d) { return d.color; },
+                "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+            });
+
+            // add title on it
+            device.append("text").style({
+                "fill": function (d) { return 'black'; },
+                "font-weight": function (d, i) { return `bold` },
+                "font-size": "16px",
+                "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+            }).text(function (d, i) { return d.macAddress });
+
+            // add text on level
+            g.append("text")
+            .style({
+                "fill": function (d) { return 'black'; },
+                "font-weight": function (d, i) { return `bold` },
+                "font-size": "16px",
+                "transform": function (d, i) { return `translate(0, ${i * d.h}px) rotate(90deg)` }
+            })
+            .text(function (d, i) { return d.level });
+
+            // add line to differentiate levels
+            g.append("line")
+            .style({
+                "stroke": function (d) { return 'black'; }
+            })
+            .attr({
+                "x1": 0,
+                "x2": 500,
+                "y1": function (d, i) { return i * d.h + d.h; },
+                "y2": function (d, i) { return i * d.h + d.h; }
+            });    
+
+            function makeLineObject(){
+                var resObj = [];
+                var jatera = [];
+                data.forEach(element => {
+                    var node = d3.select(`#${element.macAddress}`).node();
+                    jatera.push("00000");
+                    jatera.push(element.macAddress);
+                    var cordinates = getCoordinate(node);
+                        element.link.forEach( element1 => {
+                            jatera.push(element1);
+                            var childNode = d3.select(`#${element1}`).node();
+                                cCordinates = getCoordinate1(childNode);
+                                var sossom = {...cordinates,...cCordinates}
+                                resObj.push(sossom);
+                        });
+                });
+                return resObj;
+            }
+
+            function getCoordinate(node) {
+                var source = node.getBoundingClientRect();
+                return {
+                    "x1": source.x,
+                    "y1": source.y
+                }
+            }
+
+            function getCoordinate1(node) {
+                var source = node.getBoundingClientRect();
+                return {
+                    "x2": source.x,
+                    "y2": source.y
+                }
+            }
+
+            var svg1 = d3.select("#simple_rectangle2")
+            .append("svg")
+            .attr("width", 50)
+            .attr("height", 50);
+
+            svg1.append("defs").append("marker")
+            .attr("id", "arrowhead")
+            .attr("markerUnits", "strokeWidth")
+            .attr("markerWidth", 12)
+            .attr("markerHeight", 12)
+            .attr("viewBox", "0 0 12 12")
+            .attr("refX", 6 )
+            .attr("refY", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
+            .style("transform", function (d, i) { return `scale(10 10)` })
+
+            g.selectAll("line")
+            .data(makeLineObject())
+            .enter().append("line")
+            .attr({
+                "x1": function (d) { return d.x1; },
+                "x2": function (d) { return d.x2; },
+                "y1": function (d) { return d.y1; },
+                "y2": function (d) { return d.y2; },
+                "stroke-width": .5,
+                "stroke": "black",
+                "marker-end":"url(#arrowhead)"  
+            })
+            .style({
+                "stroke-dasharray": 0
+            }); 
+
+          
+    </script>
+
+</body>
+
+</html>

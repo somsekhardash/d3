@@ -1,0 +1,179 @@
+[
+  {
+    "assetid": "34c904c8-364e-49d7-becd-441ae7629daf",
+    "type": "server",
+    "level": "level1",
+    "link": [
+      "add40305-e514-4357-a681-9e7e8e00e208",
+      "fa292ea9-03b1-4205-a9a5-889a7bee7b4b"
+    ]
+  },{
+    "assetid": "708bd79e-b3b3-47ec-8c71-8b3de524f87f",
+    "type": "windows_ws",
+    "level": "level2",
+    "link": [
+      "f875c84d-ad4b-49c5-96bb-86f47192ecfd",
+      "d204260a-9922-4005-8258-b5b03d105b1f"
+    ]
+  },{
+    "assetid": "1c0fa65d-5731-4b9a-8917-81800c300bad",
+    "type": "server",
+    "level": "level3",
+    "link": [
+      "0106b3e4-09dc-4bee-b7bb-0dac99ead862"
+    ]
+  },{
+    "assetid": "b915f14d-09aa-4a0b-9c8b-f5eb0cbb4306",
+    "type": "server",
+    "level": "level4",
+    "link": [
+      "1c0fa65d-5731-4b9a-8917-81800c300bad"
+    ]
+  },{
+    "assetid": "f3fc4f07-1a37-476f-83a6-020dec57bc53",
+    "type": "server",
+    "level": "level2",
+    "link": [
+      "3f20ac05-27e5-4566-ae19-d93fdf45f09e"
+    ]
+  },{
+    "assetid": "1ca2c9e4-15ca-4038-a54f-46cc334f788d",
+    "type": "server",
+    "level": "level2",
+    "link": [
+      "0db3a01e-950e-435b-9280-f78fe9f9f0ae"
+    ]
+  },{
+    "assetid": "f3c84c50-f773-4b58-ae3e-29043b3ad96b",
+    "type": "windows_ws",
+    "level": "level1",
+    "link": [
+      
+    ]
+  },{
+    "assetid": "05e55d65-abe2-4861-b2b2-4c17dd39bd0c",
+    "type": "windows_ws",
+    "level": "level2",
+    "link": [
+      "5ecf8bf7-a556-47fb-a586-6f254a0f1a2e",
+      "cb279838-a3b6-4e08-9a8b-cc9caf425b59"
+    ]
+  },{
+    "assetid": "2791f90d-9bca-4601-8d5f-c6cbb6f2b705",
+    "type": "server",
+    "level": "level1",
+    "link": [
+      
+    ]
+  },{
+    "assetid": "97525193-dd76-4605-aa9c-80500059fb8f",
+    "type": "windows_ws",
+    "level": "level3",
+    "link": [
+      "0ce3209c-0de8-44d0-9ab4-7322b2346f41",
+      "15e7f4e3-e5ea-45e2-a5af-af36ffe9da41"
+    ]
+  },{
+    "assetid": "5a2e10b3-8440-44f3-964b-881d5a23ca97",
+    "type": "windows_ws",
+    "level": "level1",
+    "link": [
+      "b7bb08cf-4257-4de6-b027-d2e93a35b42d"
+    ]
+  },{
+    "assetid": "cb400251-a68d-4e5a-9ac1-ee5fc8b29150",
+    "type": "server",
+    "level": "level1",
+    "link": [
+      "1d7f467b-d174-4560-aeb7-f7328bf0946d"
+    ]
+  },{
+    "assetid": "c970a646-f948-49da-a6e2-4ec545eb2a05",
+    "type": "windows_ws",
+    "level": "level2",
+    "link": [
+      
+    ]
+  },{
+    "assetid": "7e7bc2ad-ca71-4016-9b6e-4c3ca4c33bd4",
+    "type": "server",
+    "level": "level1",
+    "link": [
+      
+    ]
+  },{
+    "assetid": "a49779db-fcdc-47e6-942f-6853e62f6898",
+    "type": "server",
+    "level": "level4",
+    "link": [
+      "34b631a6-1445-40ce-bd00-e0aaa1c4e645"
+    ]
+  },{
+    "assetid": "8d74acef-bcb7-45ec-aacb-3cc26121e626",
+    "type": "server",
+    "level": "level1",
+    "link": [
+      "c970a646-f948-49da-a6e2-4ec545eb2a05",
+      "89c42f87-726b-462e-84c9-68b21dcf66f6"
+    ]
+  },{
+    "assetid": "199dfdc8-0576-4765-a89c-4427932a7434",
+    "type": "windows_ws",
+    "level": "level1",
+    "link": [
+      "6d4af451-f0a1-4c4a-a0f2-454eb9229ce9",
+      "e3b47826-1bdd-45b5-aa6f-e113e48341fb"
+    ]
+  },{
+    "assetid": "708bd79e-b3b3-47ec-8c71-8b3de524f87f",
+    "type": "windows_ws",
+    "level": "level4",
+    "link": [
+      "05e55d65-abe2-4861-b2b2-4c17dd39bd0c"
+    ]
+  },{
+    "assetid": "f3fc4f07-1a37-476f-83a6-020dec57bc53",
+    "type": "windows_ws",
+    "level": "level3",
+    "link": [
+      
+    ]
+  },{
+    "assetid": "f3c84c50-f773-4b58-ae3e-29043b3ad96b",
+    "type": "windows_ws",
+    "level": "level1",
+    "link": [
+      "708bd79e-b3b3-47ec-8c71-8b3de524f87f"
+    ]
+  },{
+    "assetid": "97525193-dd76-4605-aa9c-80500059fb8f",
+    "type": "windows_ws",
+    "level": "level3",
+    "link": [
+      "f3c84c50-f773-4b58-ae3e-29043b3ad96b"
+    ]
+  },{
+    "assetid": "cb400251-a68d-4e5a-9ac1-ee5fc8b29150",
+    "type": "windows_ws",
+    "level": "level4",
+    "link": [
+      "1ca2c9e4-15ca-4038-a54f-46cc334f788d"
+    ]
+  },{
+    "assetid": "8d74acef-bcb7-45ec-aacb-3cc26121e626",
+    "type": "server",
+    "level": "level4",
+    "link": [
+      "7e7bc2ad-ca71-4016-9b6e-4c3ca4c33bd4",
+      "d2d0d15d-8ff9-4cd4-8ff1-2635c8859273"
+    ]
+  },{
+    "assetid": "cb400251-a68d-4e5a-9ac1-ee5fc8b29150",
+    "type": "server",
+    "level": "level4",
+    "link": [
+      "7e6632e8-c74a-4234-9b19-70ec617cf443",
+      "a49779db-fcdc-47e6-942f-6853e62f6898"
+    ]
+  }
+]
