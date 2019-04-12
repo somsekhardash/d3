@@ -24,8 +24,8 @@
         
         var params = {
             selector: "#svgChart",
-            dataLoadUrl: "https://api.myjson.com/bins/p2jq0",
-            // dataLoadUrl: "https://api.myjson.com/bins/11msl4",
+           // dataLoadUrl: "https://api.myjson.com/bins/p2jq0",
+            dataLoadUrl: "https://api.myjson.com/bins/sze0k",
             chartWidth: window.innerWidth - 50,
             chartHeight: window.innerHeight - 50,
             funcs: {
@@ -34,7 +34,8 @@
             },
             data: null,
             levels: null,
-            levelData: []
+            levelData: [],
+            linkData: {}
         }
 
         var attrs = {
@@ -47,7 +48,8 @@
             maxLevel: 4,
             levelBGColor: '#000000',
             levelTextColor: '#B4B4B4',
-            levelTapColor: '#0C74DA'
+            levelTapColor: '#0C74DA',
+            rangeLevel: 250
         }
 
         var levels = {
@@ -76,8 +78,17 @@
                 params.levelData = res.reverse();
             };
 
+            makeLinkData = (data) => {
+                var obj = {};
+                data.forEach((item)=> {
+                    obj[item.assetIdShort] = item.link.map(({ assetIdShort }) => assetIdShort)
+                });
+                params.linkData = obj;
+            };
+
             (() => {
                 makeLevelData(params.data);
+                makeLinkData(params.data);
             })();
 
            
@@ -118,61 +129,107 @@
                 levelContainer.append("line")
                 .style({
                     "stroke": function (d) { return 'black'; },
-                    "stroke-dasharray": function (d) { return '5,5'; }
+                    "stroke-dasharray": function (d) { return '5,5'; },
+                    "stroke-width": '1px'
                 })
                 .attr({
                     "x1": 0,
                     "x2": params.chartWidth,
-                    "y1": function (d, i) { return i * attrs.levelHeight },
-                    "y2": function (d, i) { return i * attrs.levelHeight },
+                    "y1": function (d, i) { return i * (attrs.levelHeight) },
+                    "y2": function (d, i) { return i * (attrs.levelHeight) },
                     "id": function (d,i) { return `line${levels[d.id]}`}
                 });    
 
                 var deviceContainer = levelContainer.append("g")
                 .style({
-                    "transform": function (d, i) { return `translate( ${attrs.levelWidth*2}px, ${ i * attrs.levelHeight + attrs.levelHeight/2.5}px)` }
+                   "transform": function (d, i) { return `translate( ${attrs.levelWidth*2}px, ${ i * attrs.levelHeight + attrs.levelHeight/2.5}px)` }
                 })
                 .selectAll("g")
                 .data(function (d) { return d.data; })
                 .enter().append("g");
 
-                deviceContainer.append("svg:image")
+                deviceContainer 
+                    .append("circle")
+                    .attr({
+                        "r": 3,
+                        "class": 'circleClass',
+                        "id": function (d, i) { return `${d.assetIdShort}`; },
+                        "cx": function (d,i) {  
+                                var xx = d3.scale.linear()
+                                        .domain([0, d.link.length])
+                                        .range([0, attrs.rangeLevel]);
+                                    return xx(i);
+                        },
+                        
+                        "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
+                    });
+
+
+                deviceContainer
+                .append("svg:image")
                 .attr({
                     "xlink:href": function (d) { return `./svg/${d.assetType}.svg` },
                     "height": 30,
                     "width": 30,
-                    "id": function (d) { return `${d.assetIdShort}`; },
-                    "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; }
-                })
-                .style({
-                    "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+                    "class": "svgImage",
+                    "id": function (d) { return `icon${d.assetIdShort}`; },
+                    "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
+                    "x": function (d,i) {  
+                                var xx = d3.scale.linear()
+                                        .domain([0, d.link.length])
+                                        .range([0, attrs.rangeLevel]);
+                                    return xx(i) - 15;
+                    }
                 })
                 .on("click", function (d) {
+
                     d3.selectAll(".dline").remove();
+                    
+                    d3.selectAll(".svgImage").style({
+                        "opacity": 0.2
+                    });
+                    
+                    d3.select(this).style({
+                        "opacity": 1,
+                        "stroke":  "#0C74DA"
+                    });
+
+                    if(params.linkData[d.assetIdShort].length){
+                        params.linkData[d.assetIdShort].forEach((element)=>{
+                            d3.select(`#icon${element}`).style({
+                                "opacity": 1,
+                                "stroke":  "#0C74DA"
+                            });
+                        });
+                    }
+
                     svgContainer
                         .selectAll(".line")
                         .data(makeLineObject([d]))
                         .enter().append("path")
                         .attr("class", "dline")
                         .attr("d", lineFunction)
-                        .attr("stroke", "#FF0000")
+                        .attr("stroke", "#0C74DA")
                         .attr("stroke-width", 2)
                         .attr("fill", "none").style("stroke-opacity", 1);
                 });
-
-
-                deviceContainer
+                
+                deviceContainer 
                     .append("text")
                     .text(function (d, i) { return d.assetName.replace("in-w-itlis","")})
-                    .style({
-                        "transform": function (d, i) { return `translate(${60*i}px,0px)` }
+                    .attr({
+                        "x": function (d,i) {  
+                                var xx = d3.scale.linear()
+                                        .domain([0, d.link.length])
+                                        .range([0, attrs.rangeLevel - 5]);
+                                    return xx(i);
+                        }
                     });
-
-                
+  
                 getCoordinate = (node) => {
                     var source = node.getBoundingClientRect();
                     return {
-                        "x": source.x,
+                        "x": source.x - 5,
                         "y": source.y
                     }
                 };
@@ -230,166 +287,6 @@
                 .attr("stroke", "#D3D3D3")
                 .attr("stroke-width", .5)
                 .attr("fill", "none");
-
-//=========================================
-
-                        // var lineGraph = svgContainer
-                        //     .selectAll("path")
-                        //     .data(makeLineObject())
-                        //     .append("path")
-                        //     .attr("d", function (d,t) {return lineFunction(d)} )
-                        //     .attr("stroke", "blue")
-                        //     .attr("stroke-width", 2)
-                        //     .attr("fill", "none");
-
-            // g.selectAll("line")
-            // .data(makeLineObject())
-            // .enter().append("line")
-            // .attr({
-            //     "x1": function (d) { return d.x1; },
-            //     "x2": function (d) { return d.x2; },
-            //     "y1": function (d) { return d.y1; },
-            //     "y2": function (d) { return d.y2; },
-            //     "stroke-width": .5,
-            //     "stroke": "black",
-            //     "marker-end":"url(#arrowhead)"  
-            // })
-            // .style({
-            //     "stroke-dasharray": 0
-            // });
-
-
-
-            // function getCoordinate(node) {
-            //     var source = node.getBoundingClientRect();
-            //     return {
-            //         "x1": source.x,
-            //         "y1": source.y
-            //     }
-            // }
-
-            // function getCoordinate1(node) {
-            //     var source = node.getBoundingClientRect();
-            //     return {
-            //         "x2": source.x,
-            //         "y2": source.y
-            //     }
-            // }
-
-            // levelContainer.selectAll("line")
-            //     .data(makeLineObject())
-            //     .enter().append("line")
-            //     .attr({
-            //         "x1": function (d) { return d.x1; },
-            //         "x2": function (d) { return d.x2; },
-            //         "y1": function (d) { return d.y1; },
-            //         "y2": function (d) { return d.y2; },
-            //         "stroke-width": .5,
-            //         "stroke": "black"  
-            //     })
-            //     .style({
-            //         "stroke-dasharray": 0
-            // }); 
-
-            
-        //     // add title on it
-        //     device.append("text").style({
-        //         "fill": function (d) { return 'black'; },
-        //         "font-weight": function (d, i) { return `bold` },
-        //         "font-size": "16px",
-        //         "transform": function (d, i) { return `translate(${60*i}px,0px)` }
-        //     }).text(function (d, i) { return d.assetId });
-
-        //     // add text on level
-        //     g.append("text")
-        //     .style({
-        //         "fill": function (d) { return 'black'; },
-        //         "font-weight": function (d, i) { return `bold` },
-        //         "font-size": "16px",
-        //         "transform": function (d, i) { return `translate(0, ${i * d.h}px) rotate(90deg)` }
-        //     })
-        //     .text(function (d, i) { return d.level });
-
-        //     // add line to differentiate levels
-        //     g.append("line")
-        //     .style({
-        //         "stroke": function (d) { return 'black'; }
-        //     })
-        //     .attr({
-        //         "x1": 0,
-        //         "x2": 500,
-        //         "y1": function (d, i) { return i * d.h + d.h; },
-        //         "y2": function (d, i) { return i * d.h + d.h; }
-        //     });    
-
-        //     function makeLineObject(){
-        //         var resObj = [];
-        //         var jatera = [];
-        //         data.forEach(element => {
-        //             var node = d3.select(`#${element.assetId}`).node();
-        //             jatera.push("00000");
-        //             jatera.push(element.assetId);
-        //             var cordinates = getCoordinate(node);
-        //                 element.link.forEach( element1 => {
-        //                     jatera.push(element1);
-        //                     var childNode = d3.select(`#${element1}`).node();
-        //                         cCordinates = getCoordinate1(childNode);
-        //                         var sossom = {...cordinates,...cCordinates}
-        //                         resObj.push(sossom);
-        //                 });
-        //         });
-        //         return resObj;
-        //     }
-
-        //     function getCoordinate(node) {
-        //         var source = node.getBoundingClientRect();
-        //         return {
-        //             "x1": source.x,
-        //             "y1": source.y
-        //         }
-        //     }
-
-        //     function getCoordinate1(node) {
-        //         var source = node.getBoundingClientRect();
-        //         return {
-        //             "x2": source.x,
-        //             "y2": source.y
-        //         }
-        //     }
-
-        //     var svg1 = d3.select("#simplerectangle2")
-        //     .append("svg")
-        //     .attr("width", 50)
-        //     .attr("height", 50);
-
-        //     svg1.append("defs").append("marker")
-        //     .attr("id", "arrowhead")
-        //     .attr("markerUnits", "strokeWidth")
-        //     .attr("markerWidth", 12)
-        //     .attr("markerHeight", 12)
-        //     .attr("viewBox", "0 0 12 12")
-        //     .attr("refX", 6 )
-        //     .attr("refY", 6)
-        //     .attr("orient", "auto")
-        //     .append("path")
-        //     .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
-        //     .style("transform", function (d, i) { return `scale(10 10)` })
-
-        //     g.selectAll("line")
-        //     .data(makeLineObject())
-        //     .enter().append("line")
-        //     .attr({
-        //         "x1": function (d) { return d.x1; },
-        //         "x2": function (d) { return d.x2; },
-        //         "y1": function (d) { return d.y1; },
-        //         "y2": function (d) { return d.y2; },
-        //         "stroke-width": .5,
-        //         "stroke": "black",
-        //         "marker-end":"url(#arrowhead)"  
-        //     })
-        //     .style({
-        //         "stroke-dasharray": 0
-        //     }); 
         }
     
     </script>
