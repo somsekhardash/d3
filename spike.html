@@ -49,7 +49,8 @@
             levelBGColor: '#000000',
             levelTextColor: '#B4B4B4',
             levelTapColor: 'black',
-            rangeLevel: params.chartWidth/8
+            rangeLevel: params.chartWidth/8,
+            circleHeight: params.chartHeight / 12
         }
 
         var levels = {
@@ -109,20 +110,37 @@
 
                 if (sourcelevel > destinationevel) {
                     level = destinationevel;
+                    var pipe = d3.select(`#line${parseInt(level)}`).node();
+                    var pipeCord = getCoordinate(pipe);
+
+                    nodeLine.push(sourceCord);
+                    nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': distCord.y });
+                    return nodeLine;
                 } else if (sourcelevel < destinationevel) {
                     level = sourcelevel;
+                    var pipe = d3.select(`#line${parseInt(level)}`).node();
+                    var pipeCord = getCoordinate(pipe);
+
+                    nodeLine.push(sourceCord);
+                    nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': distCord.y + attrs.circleHeight/2.4});
+                    return nodeLine;
                 } else {
                     level = sourcelevel;
+                    var pipe = d3.select(`#line${parseInt(level)}`).node();
+                    var pipeCord = getCoordinate(pipe);
+
+                    nodeLine.push(sourceCord);
+                    nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
+                    nodeLine.push({ 'x': distCord.x, 'y': distCord.y - attrs.circleHeight/2.4 });
+                    return nodeLine;
                 }
 
-                var pipe = d3.select(`#line${parseInt(level)}`).node();
-                var pipeCord = getCoordinate(pipe);
-
-                nodeLine.push(sourceCord);
-                nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
-                nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
-                nodeLine.push({ 'x': distCord.x, 'y': distCord.y-5 });
-                return nodeLine;
+               
             }
 
             getCoordinate = (node) => {
@@ -186,7 +204,7 @@
             .style({
                     "fill": 'white',
                     "font-weight": `bold`,
-                    "font-size": "0.3em",
+                    "font-size": "0.5em",
                     "transform":  `rotate(90deg)`,
                     "text-anchor": "middle",
                     "letter-spacing": ".6em"
@@ -253,12 +271,14 @@
                     "stroke-opacity": 1
                 });
 
+                
+
             deviceSubContainer
             .append("svg:image")
             .attr({
                 "xlink:href": function (d) { return `./svg/${d.assetType}.svg` },
-                "height": 30,
-                "width": 30,
+                "height": attrs.circleHeight,
+                "width": attrs.circleHeight,
                 "class": "svgImage",
                 "id": function (d) {  return `icon${d.assetIdShort}`; },
                 "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
@@ -266,11 +286,11 @@
                     var xx = d3.scale.linear()
                             .domain([0, d.link.length])
                             .range([0, attrs.rangeLevel]);
-                        return xx(i) - 15;
+                        return xx(i) - (attrs.circleHeight/2);
                 },
                 "y": function (d,i) {
                         var ele = this.parentElement.parentElement.parentElement.getElementsByTagName("rect")[0];
-                        return ele.getBBox().y + (ele.getBBox().height/2) - (15);
+                        return ele.getBBox().y + (ele.getBBox().height/2) - (attrs.circleHeight/2);
                 }
             })
             .on("mouseover", function (d) {
@@ -297,45 +317,7 @@
                     "opacity": 1
                 });
 
-
-                // var connectedNode = makeLineObject([d]);
-                // //debugger;
-                // var that = this;
-                // deviceSubContainer
-                // .selectAll(function(d,i){ debugger; return that;})
-                // .data(connectedNode)
-                // .enter().insert("path")
-                // .attr({
-                //     "class": "dline",
-                //     "d": lineFunction,
-                //     "stroke": attrs.levelTapColor,
-                //     "stroke-width": 1,
-                //     "fill": "none"
-                // });
             });
-
-            // d3.select(attrs.selector)
-            //     .append("svg")
-            //     .attr({
-            //         "viewBox":`0 0 ${attrs.width} ${attrs.height}`,
-            //         "width": attrs.width,
-            //         "height": attrs.height
-            //     }).append("g");
-
-
-            // deviceSubContainer 
-            //         .append("text")
-            //         .text(function (d, i) { debugger; return d.assetName.replace("in-w-itlis","")})
-            //         .attr({
-            //             "x": function (d,i) {  
-            //                     var xx = d3.scale.linear()
-            //                             .domain([0, d.link.length])
-            //                             .range([0, attrs.rangeLevel - 5]);
-
-            //                         return xx(i);
-            //             }
-            //         });
-
         }
     </script>
 
