@@ -23,7 +23,9 @@
     <script>
         var params = {
             selector: "#svgChart",
-            dataLoadUrl: "https://api.myjson.com/bins/sze0k",
+           dataLoadUrl: "https://api.myjson.com/bins/sze0k",  //20 - 8
+           // dataLoadUrl: "https://api.myjson.com/bins/vajx4",  // 100 - 32
+            // dataLoadUrl: "https://api.myjson.com/bins/rs3g8", // 1000 - 300
             chartWidth: window.innerWidth - 50,
             chartHeight: window.innerHeight - 50,
             funcs: {
@@ -46,7 +48,7 @@
             maxLevel: 4,
             levelBGColor: '#000000',
             levelTextColor: '#B4B4B4',
-            levelTapColor: 'gray',
+            levelTapColor: 'black',
             rangeLevel: params.chartWidth/8
         }
 
@@ -119,7 +121,7 @@
                 nodeLine.push(sourceCord);
                 nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
                 nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
-                nodeLine.push({ 'x': distCord.x, 'y': distCord.y });
+                nodeLine.push({ 'x': distCord.x, 'y': distCord.y-5 });
                 return nodeLine;
             }
 
@@ -184,15 +186,16 @@
             .style({
                     "fill": 'white',
                     "font-weight": `bold`,
-                    "font-size": "10px",
+                    "font-size": "0.3em",
                     "transform":  `rotate(90deg)`,
-                    "text-anchor": "middle"
+                    "text-anchor": "middle",
+                    "letter-spacing": ".6em"
                 }).text(function (d, i) { return d.id; });
                
             levelContainer.append("line")
                 .style({
                     "stroke": function (d) { return 'gray'; },
-                    "stroke-dasharray": function (d) { return '8,8'; },
+                    "stroke-dasharray": function (d) { return '2,2'; },
                     "stroke-width": 1
                 })
                 .attr({
@@ -211,7 +214,7 @@
                                         .enter()
                                         .append("g")
                                         .style({
-                                            "transform": function (d, i) { return `translate(5%, 0)` }
+                                            "transform": function (d, i) { return `translate(3%, 0)` }
                                         });
 
             var circleContainer = deviceSubContainer
@@ -270,8 +273,10 @@
                         return ele.getBBox().y + (ele.getBBox().height/2) - (15);
                 }
             })
-            .on("click", function (d) {
-                d3.selectAll(".dline").remove();
+            .on("mouseover", function (d) {
+                d3.selectAll(".dline").style({
+                    "opacity": 0
+                });
                 d3.selectAll(".svgImage").style({
                     "opacity": 0.2
                 });
@@ -279,6 +284,7 @@
                     "opacity": 1,
                     "stroke":  attrs.levelTapColor
                 });
+                
                 if(params.linkData[d.assetIdShort].length){
                     params.linkData[d.assetIdShort].forEach((element)=>{
                         d3.select(`#icon${element}`).style({
@@ -287,20 +293,25 @@
                         });
                     });
                 }
-
-                var connectedNode = makeLineObject([d]);
-
-                deviceSubContainer
-                .selectAll(function(d,i){return this})
-                .data(connectedNode)
-                .enter().insert("path")
-                .attr({
-                    "class": "dline",
-                    "d": lineFunction,
-                    "stroke": attrs.levelTapColor,
-                    "stroke-width": 1,
-                    "fill": "none"
+                d3.select(this.parentElement).selectAll(".dline").style({
+                    "opacity": 1
                 });
+
+
+                // var connectedNode = makeLineObject([d]);
+                // //debugger;
+                // var that = this;
+                // deviceSubContainer
+                // .selectAll(function(d,i){ debugger; return that;})
+                // .data(connectedNode)
+                // .enter().insert("path")
+                // .attr({
+                //     "class": "dline",
+                //     "d": lineFunction,
+                //     "stroke": attrs.levelTapColor,
+                //     "stroke-width": 1,
+                //     "fill": "none"
+                // });
             });
 
             // d3.select(attrs.selector)
