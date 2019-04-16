@@ -18,13 +18,11 @@
         <div id="svgChart"></div>
     </div>
 
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>
+    <script src='./d3.js'></script>
 
     <script>
-        
         var params = {
             selector: "#svgChart",
-           // dataLoadUrl: "https://api.myjson.com/bins/p2jq0",
             dataLoadUrl: "https://api.myjson.com/bins/sze0k",
             chartWidth: window.innerWidth - 50,
             chartHeight: window.innerHeight - 50,
@@ -43,13 +41,13 @@
             root: params.data,
             width: params.chartWidth,
             height: params.chartHeight,
-            levelHeight: params.chartHeight/4,
-            levelWidth: 20,
+            levelHeight: params.chartHeight / 4,
+            levelWidth: '1%' ,
             maxLevel: 4,
             levelBGColor: '#000000',
             levelTextColor: '#B4B4B4',
-            levelTapColor: '#0C74DA',
-            rangeLevel: 250
+            levelTapColor: 'gray',
+            rangeLevel: params.chartWidth/8
         }
 
         var levels = {
@@ -58,7 +56,7 @@
             "LEVEL3": 3,
             "LEVEL4": 4
         }
-
+        
         d3.json(params.dataLoadUrl, function (data) {
             params.data = data.assetData;
             params.levels = data.levelDetails;
@@ -73,30 +71,85 @@
                     var resData = data.filter((item) => {
                         return item.purdueLevel == element
                     });
-                    res.push({ id: element, data: resData });
+                    res.push({ id: element, link: resData });
                 });
                 params.levelData = res.reverse();
             };
 
             makeLinkData = (data) => {
                 var obj = {};
-                data.forEach((item)=> {
+                data.forEach((item) => {
                     obj[item.assetIdShort] = item.link.map(({ assetIdShort }) => assetIdShort)
                 });
                 params.linkData = obj;
             };
+
+            makeLineObject = (data) => {
+                var result = [];
+                data.forEach(element => {
+                    element.link.forEach(element1 => {
+                        var nodeLine = drawPathNode(element.assetIdShort, element1.assetIdShort);
+                        result.push(nodeLine);
+                    });
+                });
+                return result;
+            }
+
+            drawPathNode = (element, element1) => {
+                var nodeLine = [];
+                var source = d3.select(`#${element}`).node();
+                var sourceCord = getCoordinate(source);
+                var sourcelevel = source.dataset.level;
+                var destination = d3.select(`#${element1}`).node();
+                var distCord = getCoordinate(destination);
+                var destinationevel = destination.dataset.level;
+                var level = 0;
+
+                if (sourcelevel > destinationevel) {
+                    level = destinationevel;
+                } else if (sourcelevel < destinationevel) {
+                    level = sourcelevel;
+                } else {
+                    level = sourcelevel;
+                }
+
+                var pipe = d3.select(`#line${parseInt(level)}`).node();
+                var pipeCord = getCoordinate(pipe);
+
+                nodeLine.push(sourceCord);
+                nodeLine.push({ 'x': sourceCord.x , 'y': pipeCord.y });
+                nodeLine.push({ 'x': distCord.x, 'y': pipeCord.y });
+                nodeLine.push({ 'x': distCord.x, 'y': distCord.y });
+                return nodeLine;
+            }
+
+            getCoordinate = (node) => {
+                var source = node.getBBox();
+                return {
+                    "x": source.x,
+                    "y": source.y
+                }
+            };
+
+            var lineFunction = d3.svg.line()
+                .x(function (d) { return d.x; })
+                .y(function (d) { return d.y; })
+                .interpolate("linear");
 
             (() => {
                 makeLevelData(params.data);
                 makeLinkData(params.data);
             })();
 
-           
+
             // create the svg container 
             var svgContainer = d3.select(attrs.selector)
                 .append("svg")
-                .attr("width", attrs.width)
-                .attr("height", attrs.height).append("g");
+                .attr({
+                    "viewBox":`0 0 ${attrs.width} ${attrs.height}`,
+                    "width": attrs.width,
+                    "height": attrs.height
+                }).append("g");
 
             var levelContainer = svgContainer.selectAll("g")
                 .data(params.levelData)
@@ -108,187 +161,171 @@
                     "id": function (d) { return d.assetIdShort; },
                     "width": attrs.levelWidth,
                     "height": attrs.levelHeight,
+                    "y": function (d, i) { return  i * attrs.levelHeight; },
+                    "x": 0
                 })
                 .style({
                     "fill": function (d) { return d.color; },
                     "stroke": "white",
                     "stroke-width": 1,
-                    "transform": function (d, i) { return `translate(0, ${i * attrs.levelHeight}px)` }
                 });
-                
-                levelContainer.append("text")
-                .style({
-                    "fill": 'white',
-                    "font-weight":  `bold`,
-                    "font-size": "12px",
-                    "transform": function (d, i) { return `translate(0, ${((i * attrs.levelHeight) + attrs.levelHeight/2)}px) rotate(90deg)` },
-                    "text-anchor": "middle"
-                }).text(function (d, i) { return d.id; })
-                .attr('dy', '-0.4em');
 
-                levelContainer.append("line")
+            levelContainer.append("text")
+            .attr({
+                "x": function (d, i) { 
+                    var ele = this.parentElement.getBBox(); 
+                    return ((ele.y) + ele.height/2);
+                },
+                "y": function (d, i) {
+                    var ele = this.parentElement.getBBox(); 
+                    return (-(ele.x + ele.width/2)/2);
+                }
+            })
+            .style({
+                    "fill": 'white',
+                    "font-weight": `bold`,
+                    "font-size": "10px",
+                    "transform":  `rotate(90deg)`,
+                    "text-anchor": "middle"
+                }).text(function (d, i) { return d.id; });
+               
+            levelContainer.append("line")
                 .style({
-                    "stroke": function (d) { return 'black'; },
-                    "stroke-dasharray": function (d) { return '5,5'; },
-                    "stroke-width": '1px'
+                    "stroke": function (d) { return 'gray'; },
+                    "stroke-dasharray": function (d) { return '8,8'; },
+                    "stroke-width": 1
                 })
                 .attr({
                     "x1": 0,
                     "x2": params.chartWidth,
                     "y1": function (d, i) { return i * (attrs.levelHeight) },
                     "y2": function (d, i) { return i * (attrs.levelHeight) },
-                    "id": function (d,i) { return `line${levels[d.id]}`}
-                });    
-
-                var deviceContainer = levelContainer.append("g")
-                .style({
-                   "transform": function (d, i) { return `translate( ${attrs.levelWidth*2}px, ${ i * attrs.levelHeight + attrs.levelHeight/2.5}px)` }
-                })
-                .selectAll("g")
-                .data(function (d) { return d.data; })
-                .enter().append("g");
-
-                deviceContainer 
-                    .append("circle")
-                    .attr({
-                        "r": 3,
-                        "class": 'circleClass',
-                        "id": function (d, i) { return `${d.assetIdShort}`; },
-                        "cx": function (d,i) {  
-                                var xx = d3.scale.linear()
-                                        .domain([0, d.link.length])
-                                        .range([0, attrs.rangeLevel]);
-                                    return xx(i);
-                        },
-                        
-                        "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
-                    });
-
-
-                deviceContainer
-                .append("svg:image")
-                .attr({
-                    "xlink:href": function (d) { return `./svg/${d.assetType}.svg` },
-                    "height": 30,
-                    "width": 30,
-                    "class": "svgImage",
-                    "id": function (d) { return `icon${d.assetIdShort}`; },
-                    "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
-                    "x": function (d,i) {  
-                                var xx = d3.scale.linear()
-                                        .domain([0, d.link.length])
-                                        .range([0, attrs.rangeLevel]);
-                                    return xx(i) - 15;
-                    }
-                })
-                .on("click", function (d) {
-
-                    d3.selectAll(".dline").remove();
-                    
-                    d3.selectAll(".svgImage").style({
-                        "opacity": 0.2
-                    });
-                    
-                    d3.select(this).style({
-                        "opacity": 1,
-                        "stroke":  "#0C74DA"
-                    });
-
-                    if(params.linkData[d.assetIdShort].length){
-                        params.linkData[d.assetIdShort].forEach((element)=>{
-                            d3.select(`#icon${element}`).style({
-                                "opacity": 1,
-                                "stroke":  "#0C74DA"
-                            });
-                        });
-                    }
-
-                    svgContainer
-                        .selectAll(".line")
-                        .data(makeLineObject([d]))
-                        .enter().append("path")
-                        .attr("class", "dline")
-                        .attr("d", lineFunction)
-                        .attr("stroke", "#0C74DA")
-                        .attr("stroke-width", 2)
-                        .attr("fill", "none").style("stroke-opacity", 1);
+                    "id": function (d, i) { return `line${levels[d.id]}` }
                 });
-                
-                deviceContainer 
-                    .append("text")
-                    .text(function (d, i) { return d.assetName.replace("in-w-itlis","")})
-                    .attr({
-                        "x": function (d,i) {  
-                                var xx = d3.scale.linear()
-                                        .domain([0, d.link.length])
-                                        .range([0, attrs.rangeLevel - 5]);
-                                    return xx(i);
-                        }
-                    });
-  
-                getCoordinate = (node) => {
-                    var source = node.getBoundingClientRect();
-                    return {
-                        "x": source.x - 5,
-                        "y": source.y
-                    }
-                };
 
-                drawPathNode = (element, element1) => {
-                    var nodeLine= []; 
-                    var source = d3.select(`#${element}`).node();
-                    var sourceCord = getCoordinate(source);
-                    var sourcelevel = source.dataset.level;
-                    var destination = d3.select(`#${element1}`).node();
-                    var distCord = getCoordinate(destination);
-                    var destinationevel = destination.dataset.level;
-                    var level = 0;
+            var deviceContainer = levelContainer.append('g');
 
-                    if(sourcelevel > destinationevel){
-                        level = destinationevel;
-                    } else if(sourcelevel < destinationevel) {
-                        level = sourcelevel;
-                    } else {
-                        level = sourcelevel;
-                    }
-                    
-                    var pipe = d3.select(`#line${parseInt(level)}`).node();
-                    var pipeCord = getCoordinate(pipe);
-                    
-                    nodeLine.push(sourceCord);
-                    nodeLine.push({'x': sourceCord.x, 'y': pipeCord.y});
-                    nodeLine.push({'x': distCord.x, 'y': pipeCord.y});
-                    nodeLine.push({'x': distCord.x, 'y': distCord.y});
-                    return nodeLine;
-                }
+            var deviceSubContainer = deviceContainer
+                                        .selectAll("g")
+                                        .data(function (d) { return d.link; })
+                                        .enter()
+                                        .append("g")
+                                        .style({
+                                            "transform": function (d, i) { return `translate(5%, 0)` }
+                                        });
 
-                makeLineObject= (data) => {
-                    var result = [];
-                    data.forEach(element => {
-                        element.link.forEach( element1 => {
-                            var nodeLine = drawPathNode(element.assetIdShort,element1.assetIdShort);
-                            result.push(nodeLine);
-                        });                   
-                    });
-                    return result;
-                }
+            var circleContainer = deviceSubContainer
+                .append("circle")
+                .attr({
+                    "r": 1,
+                    "class": 'circleClass',
+                    "id": function (d, i) {return `${d.assetIdShort}`; },
+                    "cx": function (d, i) {
+                        var xx = d3.scale.linear()
+                            .domain([0, d.link.length])
+                            .range([0, attrs.rangeLevel]);
+                        return xx(i);
+                    },
+                    "cy": function (d,i) {
+                        var ele = this.parentElement.parentElement.parentElement.getElementsByTagName("rect")[0];
+                        return ele.getBBox().y + (ele.getBBox().height/2);
+                    },
+                    "data-level": function (d, i) { return `${levels[d.purdueLevel]}`; },
+                });
 
-            var lineFunction = d3.svg.line()
-                        .x(function(d) { return d.x; })
-                        .y(function(d) { return d.y; })
-                        .interpolate("linear");
 
-            svgContainer
+            deviceSubContainer
                 .selectAll(".line")
-                .data(makeLineObject(params.data))
-                .enter().append("path")
-                .attr("class", "fline")
-                .attr("d", lineFunction)
-                .attr("stroke", "#D3D3D3")
-                .attr("stroke-width", .5)
-                .attr("fill", "none");
+                .data(function (d, i) { return makeLineObject([d]); })
+                .enter().insert("path")
+                .attr({
+                    "class": "dline",
+                    "d": lineFunction,
+                    "stroke": attrs.levelTapColor,
+                    "stroke-width": 1,
+                    "fill": "none"
+                })
+                .style({
+                    "transform": function (d, i) { return `translate( -${attrs.levelWidth * 2}px, -${i * attrs.levelHeight + attrs.levelHeight / 2.5}px)` },
+                    "stroke-opacity": 1
+                });
+
+            deviceSubContainer
+            .append("svg:image")
+            .attr({
+                "xlink:href": function (d) { return `./svg/${d.assetType}.svg` },
+                "height": 30,
+                "width": 30,
+                "class": "svgImage",
+                "id": function (d) {  return `icon${d.assetIdShort}`; },
+                "data-level": function (d,i) { return `${levels[d.purdueLevel]}`; },
+                "x": function (d,i) {  
+                    var xx = d3.scale.linear()
+                            .domain([0, d.link.length])
+                            .range([0, attrs.rangeLevel]);
+                        return xx(i) - 15;
+                },
+                "y": function (d,i) {
+                        var ele = this.parentElement.parentElement.parentElement.getElementsByTagName("rect")[0];
+                        return ele.getBBox().y + (ele.getBBox().height/2) - (15);
+                }
+            })
+            .on("click", function (d) {
+                d3.selectAll(".dline").remove();
+                d3.selectAll(".svgImage").style({
+                    "opacity": 0.2
+                });
+                d3.select(this).style({
+                    "opacity": 1,
+                    "stroke":  attrs.levelTapColor
+                });
+                if(params.linkData[d.assetIdShort].length){
+                    params.linkData[d.assetIdShort].forEach((element)=>{
+                        d3.select(`#icon${element}`).style({
+                            "opacity": 1,
+                            "stroke":  attrs.levelTapColor
+                        });
+                    });
+                }
+
+                var connectedNode = makeLineObject([d]);
+
+                deviceSubContainer
+                .selectAll(function(d,i){return this})
+                .data(connectedNode)
+                .enter().insert("path")
+                .attr({
+                    "class": "dline",
+                    "d": lineFunction,
+                    "stroke": attrs.levelTapColor,
+                    "stroke-width": 1,
+                    "fill": "none"
+                });
+            });
+
+            // d3.select(attrs.selector)
+            //     .append("svg")
+            //     .attr({
+            //         "viewBox":`0 0 ${attrs.width} ${attrs.height}`,
+            //         "width": attrs.width,
+            //         "height": attrs.height
+            //     }).append("g");
+
+
+            // deviceSubContainer 
+            //         .append("text")
+            //         .text(function (d, i) { debugger; return d.assetName.replace("in-w-itlis","")})
+            //         .attr({
+            //             "x": function (d,i) {  
+            //                     var xx = d3.scale.linear()
+            //                             .domain([0, d.link.length])
+            //                             .range([0, attrs.rangeLevel - 5]);
+
+            //                         return xx(i);
+            //             }
+            //         });
+
         }
-    
     </script>
 
 </body>
